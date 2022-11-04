@@ -13,6 +13,8 @@ module Agents
       You must also specify a `status` parameter, you can use [Liquid](https://github.com/huginn/huginn/wiki/Formatting-Events-using-Liquid) to format the status.
       Additional parameters can be passed via `parameters`.
 
+      Set `server` to send to the right server.
+
       Set `expected_update_period_in_days` to the maximum amount of time that you'd expect to pass between Events being created by this Agent.
 
       If `output_mode` is set to `merge`, the emitted Event will be merged into the original contents of the received Event.
@@ -83,6 +85,7 @@ module Agents
     def default_options
       {
         'status' => '',
+        'server' => '',
         'access_token' => '',
         'debug' => 'false',
         'emit_events' => 'false',
@@ -92,6 +95,7 @@ module Agents
 
     form_configurable :access_token, type: :string
     form_configurable :status, type: :string
+    form_configurable :server, type: :string
     form_configurable :debug, type: :boolean
     form_configurable :emit_events, type: :boolean
     form_configurable :expected_receive_period_in_days, type: :string
@@ -99,6 +103,10 @@ module Agents
 
       unless options['access_token'].present?
         errors.add(:base, "access_token is a required field")
+      end
+
+      unless options['server'].present?
+        errors.add(:base, "server is a required field")
       end
 
       unless options['status'].present?
@@ -139,7 +147,7 @@ module Agents
 
     def publish
 
-      uri = URI.parse("https://mastodon.social/api/v1/statuses")
+      uri = URI.parse("https://#{interpolated['server']}/api/v1/statuses")
       request = Net::HTTP::Post.new(uri)
       request.set_form_data(
         "status" => "#{interpolated['status']}",
